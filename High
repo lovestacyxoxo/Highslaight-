@@ -1,0 +1,89 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local validCharacters = {
+    "sonicexe",
+    "kolossos",
+    "tailsdoll",
+    "tails",
+    "knuckles",
+    "eggman",
+    "amy",
+    "cream",
+    "sally",
+    "shadow",
+    "rouge",
+    "metalsonic",
+    "silver",
+    "blaze"
+}
+
+local function isValidCharacter(player)
+    local displayPlayers = ReplicatedStorage:WaitForChild("displayPlayers", 5)
+    if not displayPlayers then
+        return false
+    end
+
+    local playerStats = displayPlayers:FindFirstChild(player.Name)
+    if not playerStats then
+        return false
+    end
+
+    local stats = playerStats:FindFirstChild("stats")
+    if not stats then
+        return false
+    end
+
+    local characterValue = stats:FindFirstChild("character")
+    if not characterValue then
+        return false
+    end
+
+    local charName = characterValue.Value:lower()
+    for _, name in pairs(validCharacters) do
+        if charName == name then
+            return true
+        end
+    end
+    return false
+end
+
+local function applyHighlight(character)
+    if character then
+        local highlight = character:FindFirstChild("Highlight")
+        if not highlight then
+            highlight = Instance.new("Highlight")
+            highlight.Parent = character
+        end
+
+        highlight.OutlineTransparency = 0
+        highlight.FillTransparency = 1
+        highlight.OutlineColor = Color3.fromRGB(
+            math.random(0, 255),
+            math.random(0, 255),
+            math.random(0, 255)
+        )
+    end
+end
+
+local function onCharacterAdded(player, character)
+    task.wait(1)
+    if isValidCharacter(player) then
+        applyHighlight(character)
+    end
+end
+
+local function onPlayerAdded(player)
+    player.CharacterAdded:Connect(function(character)
+        onCharacterAdded(player, character)
+    end)
+    if player.Character then
+        onCharacterAdded(player, player.Character)
+    end
+end
+
+Players.PlayerAdded:Connect(onPlayerAdded)
+
+for _, player in pairs(Players:GetPlayers()) do
+    onPlayerAdded(player)
+end
