@@ -1,78 +1,69 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local validCharacters = {
-    "sonicexe",
-    "kolossos",
-    "tailsdoll",
-    "tails",
-    "knuckles",
-    "eggman",
-    "amy",
-    "cream",
-    "sally",
-    "shadow",
-    "rouge",
-    "metalsonic",
-    "silver",
-    "blaze"
+-- Character highlight colors
+local characterHighlightColors = {
+    kolossos = Color3.fromRGB(0, 0, 139),        -- Dark Blue
+    sonicexe = Color3.fromRGB(0, 0, 255),        -- Blue
+    tailsdoll = Color3.fromRGB(255, 140, 0),     -- Dark Orange
+    tails = Color3.fromRGB(255, 255, 0),         -- Yellow
+    knuckles = Color3.fromRGB(255, 0, 0),        -- Red
+    eggman = Color3.fromRGB(139, 0, 0),          -- Dark Red
+    amy = Color3.fromRGB(255, 105, 180),         -- Pink
+    cream = Color3.fromRGB(255, 253, 208),       -- Creamish
+    sally = Color3.fromRGB(139, 69, 19),         -- Brown
+    shadow = Color3.fromRGB(64, 64, 64),         -- Dark Gray
+    rouge = Color3.fromRGB(255, 255, 255),       -- White
+    metalsonic = Color3.fromRGB(173, 216, 230),  -- Light Blue
+    silver = Color3.fromRGB(210, 255, 255),      -- Arctic
+    blaze = Color3.fromRGB(138, 43, 226),        -- Purple
 }
 
-local function isValidCharacter(player)
+-- Function to get character name and highlight color
+local function getCharacterColor(player)
     local displayPlayers = ReplicatedStorage:WaitForChild("displayPlayers", 5)
     if not displayPlayers then
-        return false
+        warn("displayPlayers not found.")
+        return nil
     end
 
     local playerStats = displayPlayers:FindFirstChild(player.Name)
-    if not playerStats then
-        return false
-    end
+    if not playerStats then return nil end
 
     local stats = playerStats:FindFirstChild("stats")
-    if not stats then
-        return false
-    end
+    if not stats then return nil end
 
     local characterValue = stats:FindFirstChild("character")
-    if not characterValue then
-        return false
-    end
+    if not characterValue then return nil end
 
     local charName = characterValue.Value:lower()
-    for _, name in pairs(validCharacters) do
-        if charName == name then
-            return true
-        end
-    end
-    return false
+    return characterHighlightColors[charName]
 end
 
-local function applyHighlight(character)
-    if character then
+-- Function to apply highlight
+local function applyHighlight(character, color)
+    if character and color then
         local highlight = character:FindFirstChild("Highlight")
         if not highlight then
             highlight = Instance.new("Highlight")
             highlight.Parent = character
         end
-
         highlight.OutlineTransparency = 0
         highlight.FillTransparency = 1
-        highlight.OutlineColor = Color3.fromRGB(
-            math.random(0, 255),
-            math.random(0, 255),
-            math.random(0, 255)
-        )
+        highlight.OutlineColor = color
     end
 end
 
+-- Function to handle character spawning
 local function onCharacterAdded(player, character)
     task.wait(1)
-    if isValidCharacter(player) then
-        applyHighlight(character)
+    local color = getCharacterColor(player)
+    if color then
+        applyHighlight(character, color)
     end
 end
 
+-- Handle new players
 local function onPlayerAdded(player)
     player.CharacterAdded:Connect(function(character)
         onCharacterAdded(player, character)
@@ -81,6 +72,14 @@ local function onPlayerAdded(player)
         onCharacterAdded(player, player.Character)
     end
 end
+
+-- Connect player events
+Players.PlayerAdded:Connect(onPlayerAdded)
+
+for _, player in pairs(Players:GetPlayers()) do
+    onPlayerAdded(player)
+end
+
 
 Players.PlayerAdded:Connect(onPlayerAdded)
 
